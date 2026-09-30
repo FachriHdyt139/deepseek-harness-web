@@ -22,6 +22,24 @@ const publicDir = resolve(process.cwd(), "public");
 
 const SPA_ROUTES = /^\/(login|dashboard|settings|forgot-password)$/;
 
+/**
+ * The browser talks to Supabase directly (signInWithPassword, signUp, session
+ * refresh), so its origin has to be allowed by connect-src. Without it the
+ * browser cancels the request and supabase-js surfaces a bare "Failed to
+ * fetch" on sign in and sign up.
+ *
+ * Derived from SUPABASE_URL so we allow exactly this project's host instead
+ * of a blanket *.supabase.co rule.
+ */
+function supabaseConnectSrc() {
+  if (!config.supabase.url) return "";
+  try {
+    return ` ${new URL(config.supabase.url).origin}`;
+  } catch {
+    return "";
+  }
+}
+
 function securityHeaders(req, res, next) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -34,7 +52,7 @@ function securityHeaders(req, res, next) {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "font-src 'self' data:",
-      "connect-src 'self' ws: wss:",
+      `connect-src 'self' ws: wss:${supabaseConnectSrc()}`,
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",

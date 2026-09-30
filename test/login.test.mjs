@@ -90,3 +90,35 @@ describe("SPA is reachable while supabase auth is enabled", () => {
     }
   });
 });
+
+describe("content security policy allows the browser supabase client", () => {
+  // The SPA calls supabase.auth.signInWithPassword() directly against
+  // SUPABASE_URL. If connect-src omits that origin the browser aborts the
+  // request and supabase-js reports a bare "Failed to fetch" on sign in/up.
+  const supabaseOrigin = new URL(process.env.SUPABASE_URL).origin;
+
+  function connectSrcOf(header) {
+    const directive = String(header)
+      .split(";")
+      .map((part) => part.trim())
+      .find((part) => part.startsWith("connect-src"));
+    assert.ok(directive, "CSP must declare connect-src");
+    return directive.slice("connect-src".length).trim().split(/\s+/);
+  }
+
+  it("includes the configured supabase origin in connect-src", async () => {
+    const res = await get("/login");
+    const sources = connectSrcOf(res.headers.get("content-security-policy"));
+    assert.ok(
+      sources.includes(supabaseOrigin),
+      `connect-src must allow ${supabaseOrigin}, got: ${sources.join(" ")}`,
+    );
+  });
+
+  it("keeps connect-src restrictive rather than opening everything", async () => {
+    const res = await get("/login");
+    const sources = connectSrcOf(res.headers.get("content-security-policy"));
+    assert.ok(!sources.includes("*"), "connect-src must not be a wildcard");
+    assert.ok(sources.includes("'self'"), "connect-src must keep 'self'");
+  });
+});
