@@ -17,7 +17,8 @@ import { badRequest } from "../utils/errors.js";
 import { projectDir } from "../utils/paths.js";
 
 export const sessionsRouter = Router();
-sessionsRouter.use(authenticate);
+// Scoped to /api, see the note in projects.js.
+sessionsRouter.use("/api", authenticate);
 
 async function requireSession(req) {
   return getSession(req.user.id, req.params.id);

@@ -30,7 +30,10 @@ import { badRequest, conflict, tooLarge } from "../utils/errors.js";
 import { projectDir, resolveInside, ensureDir } from "../utils/paths.js";
 
 export const projectsRouter = Router();
-projectsRouter.use(authenticate);
+// Scoped to /api: without the prefix this guard ran for every request that
+// reached the router (mounted at "/"), which blocked the SPA shell, /login
+// and static assets with a 401 before they were ever served.
+projectsRouter.use("/api", authenticate);
 
 async function requireProject(req) {
   return getProject(req.user.id, req.params.id);
