@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: deepseek-harness-web
+    runtime: node
+    plan: free
+
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # Supabase project (Settings -> API)
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
+      # DeepSeek / OpenAI compatible provider used by the harness
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: AI_BASE_URL
+        sync: false
+      - key: AI_MODEL
+        sync: false
+
+      # Optional GitHub OAuth app
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+
+      # Optional: override the public host used for the harness Host/Origin
+      # fence. By default RENDER_EXTERNAL_HOSTNAME supplied by Render is used.
+      # - key: TRUSTED_HOST
+      #   sync: false
+
+      - key: MAX_ACTIVE_SESSIONS
+        value: 1
+      - key: SESSION_TIMEOUT_MINUTES
+        value: 30
+      - key: MAX_UPLOAD_MB
+        value: 50
